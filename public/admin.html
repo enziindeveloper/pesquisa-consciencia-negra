@@ -276,8 +276,14 @@
     });
     document.getElementById('btnReset').addEventListener('click', async () => {
       const s = surveys.find(x => x.slug === currentSlug);
-      if (!confirm(`Apagar TODAS as respostas de "${s ? s.title : currentSlug}"? Essa ação não pode ser desfeita.`)) return;
-      await fetch('/api/admin/reset?survey=' + encodeURIComponent(currentSlug), { method: 'POST' });
+      const password = prompt(`Apagar TODAS as respostas de "${s ? s.title : currentSlug}"? Digite a senha de exclusão:`);
+      if (!password) return;
+      const res = await fetch('/api/admin/reset?survey=' + encodeURIComponent(currentSlug), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      if (res.status === 403) { alert('Senha de exclusão incorreta.'); return; }
       loadResults(true);
     });
     document.addEventListener('visibilitychange', () => {

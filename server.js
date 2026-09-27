@@ -8,6 +8,7 @@ const SURVEYS = require('./surveys');
 const PORT = process.env.PORT || 3000;
 const ADMIN_USER = process.env.ADMIN_USER || 'aline01';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'aline01';
+const RESET_PASSWORD = process.env.RESET_PASSWORD || '290908';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -332,6 +333,9 @@ app.get('/api/admin/results', requireAuth, async (req, res) => {
 app.post('/api/admin/reset', requireAuth, async (req, res) => {
   const survey = await getSurvey(req.query.survey || req.body.survey || '');
   if (!survey) return res.status(404).json({ error: 'Pesquisa não encontrada.' });
+  if (!req.body || req.body.password !== RESET_PASSWORD) {
+    return res.status(403).json({ error: 'Senha de exclusão incorreta.' });
+  }
   await db.execute({ sql: 'DELETE FROM answers WHERE response_id IN (SELECT id FROM responses WHERE survey_id = ?)', args: [survey.id] });
   await db.execute({ sql: 'DELETE FROM responses WHERE survey_id = ?', args: [survey.id] });
   await bumpEpoch(survey.slug); // libera os dispositivos para votar de novo
